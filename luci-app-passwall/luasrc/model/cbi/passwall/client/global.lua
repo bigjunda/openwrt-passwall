@@ -169,9 +169,7 @@ end
 udp_node = s:taboption("Main", ListValue, "udp_node", "<a style='color: red'>" .. translate("UDP Node") .. "</a>")
 udp_node:value("nil", translate("Close"))
 --udp_node.description = translate("For proxy game network, DNS hijack etc.") .. "<br />" .. translate("The selected server will not use Kcptun.")
-udp_node:value("tcp_", translate("Same as the tcp node"))
---udp_node:value("tcp", translate("Same as the tcp node"))
---udp_node:value("tcp_", translate("Same as the tcp node") .. "（" .. translate("New process") .. "）")
+udp_node:value("tcp", translate("Same as the tcp node"))
 
 s:tab("DNS", translate("DNS"))
 
@@ -358,8 +356,16 @@ o.rmempty = false
 socks_node = s:option(ListValue, "node", translate("Socks Node"))
 socks_node:value("tcp", translate("Same as the tcp node"))
 
+local n = 0
+uci:foreach(appname, "socks", function(s)
+    if s[".name"] == section then
+        return false
+    end
+    n = n + 1
+end)
+
 o = s:option(Value, "port", "Socks " .. translate("Listen Port"))
-o.default = 9050
+o.default = n + 1080
 o.datatype = "port"
 o.rmempty = false
 

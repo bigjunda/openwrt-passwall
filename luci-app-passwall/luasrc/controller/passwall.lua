@@ -118,9 +118,11 @@ end
 function get_redir_log()
 	local proto = luci.http.formvalue("proto")
 	proto = proto:upper()
-	local filename = proto
-	if nixio.fs.access("/var/etc/passwall/" .. filename .. ".log") then
-		local content = luci.sys.exec("cat /var/etc/passwall/" .. filename .. ".log")
+	if proto == "UDP" and (ucic:get(appname, "@global[0]", "udp_node") or "nil") == "tcp" and not nixio.fs.access("/var/etc/passwall/" .. proto .. ".log") then
+		proto = "TCP"
+	end
+	if nixio.fs.access("/var/etc/passwall/" .. proto .. ".log") then
+		local content = luci.sys.exec("cat /var/etc/passwall/" .. proto .. ".log")
 		content = content:gsub("\n", "<br />")
 		luci.http.write(content)
 	else
@@ -277,7 +279,7 @@ function check_port()
 			local type = s.type
 			if type and s.address and s.port and s.remarks then
 				node_name = "%s：[%s] %s:%s" % {s.type, s.remarks, s.address, s.port}
-				tcp_socket = nixio.socket("inet", "stream")
+				tcp_socket = nixio.socket(api.get_ip_type(s.address) == "6" and "inet6" or "inet", "stream")
 				tcp_socket:setopt("socket", "rcvtimeo", 3)
 				tcp_socket:setopt("socket", "sndtimeo", 3)
 				ret = tcp_socket:connect(s.address, s.port)

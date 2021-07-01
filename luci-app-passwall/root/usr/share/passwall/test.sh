@@ -28,7 +28,7 @@ test_url() {
 	local timeout=2
 	[ -n "$3" ] && timeout=$3
 	local extra_params=$4
-	status=$(/usr/bin/curl -I -o /dev/null -skL $extra_params --connect-timeout $timeout --retry $try -w %{http_code} "$url")
+	status=$(/usr/bin/curl -I -o /dev/null -skL $extra_params --connect-timeout $timeout --retry $try --retry-all-errors -w %{http_code} "$url")
 	case "$status" in
 		204|\
 		200)
@@ -50,6 +50,10 @@ test_proxy() {
 			result=1
 		else
 			result=2
+			ping -c 3 -W 1 223.5.5.5 > /dev/null 2>&1
+			[ $? -eq 0 ] && {
+				result=1
+			}
 		fi
 	fi
 	echo $result
@@ -141,6 +145,9 @@ test_auto_switch() {
 }
 
 start() {
+	if [ "$(pgrep -f $CONFIG/test.sh | wc -l)" -gt 2 ]; then
+		exit 1
+	fi
 	ENABLED=$(config_t_get global enabled 0)
 	[ "$ENABLED" != 1 ] && return 1
 	ENABLED=$(config_t_get auto_switch enable 0)
