@@ -1,12 +1,7 @@
 module("luci.model.cbi.passwall.api.gen_xray", package.seeall)
 local api = require "luci.model.cbi.passwall.api.api"
 
-local myarg = {
-    "-node", "-proto", "-redir_port", "-socks_proxy_port", "-http_proxy_port", "-dns_listen_port", "-dns_server", "-doh_url", "-doh_host", "-doh_socks_address", "-doh_socks_port", "-loglevel"
-}
-
-local var = api.get_args(arg, myarg)
-
+local var = api.get_args(arg)
 local node_section = var["-node"]
 local proto = var["-proto"]
 local redir_port = var["-redir_port"]
@@ -217,23 +212,6 @@ if node_section then
             settings = {network = proto, followRedirect = true},
             sniffing = {enabled = true, destOverride = {"http", "tls"}}
         })
-        if proto == "tcp" and node.tcp_socks == "1" then
-            table.insert(inbounds, {
-                listen = "0.0.0.0",
-                port = tonumber(node.tcp_socks_port),
-                protocol = "socks",
-                settings = {
-                    auth = node.tcp_socks_auth,
-                    accounts = (node.tcp_socks_auth == "password") and {
-                        {
-                            user = node.tcp_socks_auth_username,
-                            pass = node.tcp_socks_auth_password
-                        }
-                    } or nil,
-                    udp = true
-                }
-            })
-        end
     end
 
     local up_trust_doh = ucursor:get(appname, "@global[0]", "up_trust_doh")
